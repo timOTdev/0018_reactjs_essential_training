@@ -569,3 +569,364 @@ const myName = "Eve";
   }
 }
 ```
+
+# 3. React Components
+## Planning an ActivityCounter
+- Making web app that counts the number of times an activity is done
+- Can be a variety of values but project requires:
+  - location
+  - date
+  - boolean
+  - boolean
+
+## Creating components with createClass()
+- Added stylesheets folder in ./src also
+- Added SkiDayCount.js in ./src/components
+- Add export to the const as well
+- Add code:
+```js
+// SkiDayCount.js
+import React from 'react'
+import '../stylesheets/ui.scss'
+
+export const SkiDayCount = React.createClass({
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>5 days</span>
+        </div>
+        <div className="powder-days">
+          <span>2 days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>1 hiking day</span>
+        </div>
+      </div>
+    )
+  }
+}
+```
+
+- In our ./src/index.js file, add:
+- Adding the window.React line helps prevent some errors
+```js
+import React from 'react'
+import { render } from 'react-dom'
+import { SkiDayCount } from './components/SkiDayCount'
+
+window.React = React
+
+render(
+  <SkiDayCount />,
+  document.getElementById('react-container')
+)
+```
+
+- `React.createClass` not recommended anymore
+- ES6 classes and stateless functional components are preferred now
+
+## Adding component properties
+- We are going to use properties to display data
+- Think of properties as objects and each property as a key
+- We are adding 4 components
+```js
+// index.js
+import React from 'react'
+import { render } from 'react-dom'
+import { SkiDayCount } from './components/SkiDayCount'
+
+window.React = React
+
+render(
+  <SkiDayCount total={50}
+               powder={20}
+               backcountry={10}
+               goal={100} />,
+  document.getElementById('react-container')
+)
+```
+```js
+// SkiDayCount.js
+import React from 'react'
+import '../stylesheets/ui.scss'
+
+export const SkiDayCount = React.createClass({
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.backcountry}</span>
+          <span>day</span>
+        </div>
+        <div>
+          <span>{this.props.goal}</span>
+        </div>
+      </div>
+    )
+  }
+}
+```
+
+## Adding component methods
+- We can also add methods 
+- This one calculates a percent and returns it
+```js
+// SkiDayCount.js
+import React from 'react'
+import '../stylesheets/ui.scss'
+
+export const SkiDayCount = React.createClass({
+  percentToDecimal(decimal) {
+    return ((decimal *100) + '%')
+  },
+  calcGoalProgress(total, goal) {
+    return this.percentToDecimal(total/goal)
+  },
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.powder}</span>
+          <span>day</span>
+        </div>
+        <div>
+          <span>
+            {this.calcGoalProgress(
+              this.props.total,
+              this.props.goal
+            )}
+          </span>
+        </div>
+      </div>
+    )
+  }
+}
+```
+
+## Creating components with ES6 class syntax
+- ES6 was released in 2015
+- React has a base class called React.component
+- We extend this class to create our own component
+- We refactor our component:
+- You do not need parentheses or commos 
+```js
+// SkiDayCount.js
+import React from 'react'
+import '../stylesheets/ui.scss'
+
+export class SkiDayCount extends React.Component { // class is rewritten, parens removed
+  percentToDecimal(decimal) {
+    return ((decimal *100) + '%')
+  } // Comma was removed
+  calcGoalProgress(total, goal) {
+    return this.percentToDecimal(total/goal)
+  } // Comma was removed
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.backcountry}</span>
+          <span>day</span>
+        </div>
+        <div>
+          <span>
+            {this.calcGoalProgress(
+              this.props.total,
+              this.props.goal
+            )}
+          </span>
+        </div>
+      </div>
+    )
+  }
+}
+```
+
+- You can also use specific components if you choose
+- So we can be specific in our import like:
+```js
+import { Component } from 'react'
+
+export class SkiDayCount extends Component {}
+```
+
+## Creating stateless functional components
+- We also have stateless functions along with React.createClass and ES6 classes
+- Eve mentions that stateless functions might have a performance benefit but we not positive
+- Recommends we use them whenever possible
+- Functions:
+1. Take in properties information and renders as JSX elements
+```
+const MyComponent = (props) => (
+  <div>{props.tile}</div>
+)
+```
+2. Can't access `this` inside
+3. Local functions need to be declared elsewhere in component
+- Now we refactor our code:
+  1. Change to an arrow function and add props parameter
+  2. Pull local methods and define it as own constant equal to arrow function
+  3. Remove `this` keyword
+  4. Remove `render` and `return`
+
+```js
+// SkiDayCount.js
+import React from 'react'
+import '../stylesheets/ui.scss'
+
+const percentToDecimal = (decimal) => {
+  return ((decimal *100) + '%')
+}
+
+const calcGoalProgress = (total, goal) => {
+  return percentToDecimal(total/goal)
+} 
+
+export const SkiDayCount = (props) => (
+  <div className="ski-day-count">
+    <div className="total-days">
+      <span>{props.total}</span>
+      <span>days</span>
+    </div>
+    <div className="powder-days">
+      <span>{props.powder}</span>
+      <span>days</span>
+    </div>
+    <div className="backcountry-days">
+      <span>{props.backcountry}</span>
+      <span>day</span>
+    </div>
+    <div>
+      <span>
+        {calcGoalProgress(
+          props.total,
+          props.goal
+        )}
+      </span>
+    </div>
+  </div>
+)
+```
+
+- Further refactoring by destructuring parameters:
+1. Destructure parameters
+2. Remove `props` from the JSX expressions
+3. Remove `import React from 'react'` since we are no longer using it
+```js
+// SkiDayCount.js
+import '../stylesheets/ui.scss'
+
+const percentToDecimal = (decimal) => {
+  return ((decimal *100) + '%')
+}
+
+const calcGoalProgress = (total, goal) => {
+  return percentToDecimal(total/goal)
+} 
+
+export const SkiDayCount = ({total, powder, backcountry, goal}) => (
+  <div className="ski-day-count">
+    <div className="total-days">
+      <span>{total}</span>
+      <span>days</span>
+    </div>
+    <div className="powder-days">
+      <span>{powder}</span>
+      <span>days</span>
+    </div>
+    <div className="backcountry-days">
+      <span>{backcountry}</span>
+      <span>day</span>
+    </div>
+    <div>
+      <span>
+        {calcGoalProgress(
+          total,
+          goal
+        )}
+      </span>
+    </div>
+  </div>
+)
+```
+
+## Adding react-icons
+- React is a library, not a framework
+- Libraries are intentionally small
+- If you need something, you can import it
+- One community is [React Icons](https://github.com/gorangajic/react-icons)
+
+1. Install react-icons
+```js
+npm install --save react-icons
+```
+2. Import in our app
+- We just want to import the icons that we need
+```js
+// SkiDayCount.js
+import '../stylesheets/ui.scss'
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+const percentToDecimal = (decimal) => {
+  return ((decimal * 100) + '%')
+}
+
+const calcGoalProgress = (total, goal) => {
+  return percentToDecimal(total/goal)
+} 
+
+export const SkiDayCount = ({total, powder, backcountry, goal}) => (
+  <div className="ski-day-count">
+    <div className="total-days">
+      <span>{total}</span>
+        <Calendar />
+      <span>days</span>
+    </div>
+    <div className="powder-days">
+      <span>{powder}</span>
+        <Snowflake />
+      <span>days</span>
+    </div>
+    <div className="backcountry-days">
+      <span>{backcountry}</span>
+        <Terrain />
+      <span>day</span>
+    </div>
+    <div>
+      <span>
+        {calcGoalProgress(
+          total,
+          goal
+        )}
+      </span>
+    </div>
+  </div>
+)
+```
