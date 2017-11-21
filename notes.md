@@ -930,3 +930,744 @@ export const SkiDayCount = ({total, powder, backcountry, goal}) => (
   </div>
 )
 ```
+
+# 4. Props and State
+## Composing components
+- We are making a table with react components
+- We changed our props and import
+```js
+// index.js
+import React from 'react'
+import { render } from 'react-dom'
+import { SkiDayList } from './components/SkiDayList'
+
+window.React = React
+render(
+	<SkiDayList days={
+    [
+      {
+        resort: "Squaw Valley",
+        date: new Date("1/2/2016"),
+        powder: true,
+        backcountry: false
+      },
+      {
+        resort: "Kirkwood",
+        date: new Date("3/28/2016"),
+        powder: false,
+        backcountry: false
+      },
+      {
+        resort: "Mt. Tallac",
+        date: new Date("4/2/2016"),
+        powder: false,
+        backcountry: true
+      }
+    ]
+  }/>,
+	document.getElementById('react-container')
+)
+```
+
+## Displaying child components
+- Created 2 files in `./src/components`: `SkidDayList.js` and `SkiDayRow.js`
+```js
+// SkiDayRow.js
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+export const SkiDayRow = ({resort, date, powder, backcountry}) => (
+  <tr>
+    <td>
+      {date.getMonth()+1}/{date.getDate()}/{date.getFullYear()}
+    </td>
+    <td>
+      {resort}
+    </td>
+    <td>
+      {(powder) ? <SnowFlake /> : null}
+    </td>
+    <td>
+      {(backcountry) ? <Terrain /> : null}
+    </td>
+  </tr>
+)
+```
+
+```js
+// SkiDayList.js
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+import { SkiDayRow } from './SkiDayRow'
+
+export const SkiDayList = ({days}) => (
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Resort</th>
+        <th>Powder</th>
+        <th>Backcountry</th>
+      </tr>
+    </thead>
+    <tbody>
+      {days.map((day,i) =>
+        <SkiDayRow key={i}
+                   resort={day.resort}
+                   date={day.date}
+                   powder={day.powder}
+                   backcountry={day.backcountry}/>
+      )}
+    </tbody>
+  </table>
+)
+```
+
+### Refactor to SkiDayList.js with spread operator
+```js
+// SkiDayList.js
+    <tbody>
+      {days.map((day,i) =>
+        <SkiDayRow key={i}
+                   {...day}/>
+      )}
+    </tbody>
+```
+
+## Default props
+- Default values helps provide a value that doesn't have values defined
+- She shows us 3 days to do it with createClass, ES6, and stateless ways
+
+### Default porps withcreateClass method
+```js
+import { createClass } from 'react'
+import '../stylesheets/ui.scss'
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+export const SkiDayCount = createClass({
+  getDefaultProps() {
+    return {
+      total: 50,
+      powder: 50,
+      backcountry: 15,
+      goal: 100
+    }
+  },
+  percentToDecimal(decimal) {
+    return ((decimal * 100) + '%')
+  },
+  calcGoalProgress(total, goal) {
+    return this.percentToDecimal(total/goal)
+  },
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+            <Calendar />
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+            <SnowFlake />
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.backcountry}</span>
+            <Terrain />
+          <span>days</span>
+        </div>
+        <div>
+          <span>
+            {this.calcGoalProgress(
+              this.props.total, 
+              this.props.goal
+            )}
+          </span>
+        </div>
+      </div>
+    )
+  }
+})
+
+// index.js
+// Don't forget to import
+import { SkiDayCount } from './components/SkiDayCount-createClass'
+```
+
+### Default props with ES6 method
+```js
+import { Component } from 'react'
+import '../stylesheets/ui.scss'
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+export class SkiDayCount extends Component {
+  percentToDecimal(decimal) {
+    return ((decimal * 100) + '%')
+  }
+  calcGoalProgress(total, goal) {
+    return this.percentToDecimal(total/goal)
+  }
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+            <Calendar />
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+            <SnowFlake />
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.backcountry}</span>
+            <Terrain />
+          <span>days</span>
+        </div>
+        <div>
+          <span>
+            {this.calcGoalProgress(
+              this.props.total, 
+              this.props.goal
+            )}
+          </span>
+        </div>
+      </div>
+    )
+  }
+}
+
+SkiDayCount.defaultProps = { 
+  total: 50,
+  powder: 10,
+  backcountry: 15,
+  goal: 75
+}
+
+// index.js
+// Don't forget to import
+import { SkiDayCount } from './components/SkiDayCount-ES6'
+```
+
+### Default props with Stateless method
+- Uses the same code as ES6 method at the very bottom
+```js
+// SkiDayCount.js
+SkiDayCount.defaultProps = { 
+  total: 50,
+  powder: 10,
+  backcountry: 15,
+  goal: 75
+}
+
+// index.js
+// Don't forget to import
+import { SkiDayCount } from './components/SkiDayCount'
+```
+
+### Setting defaults directly in the function
+```js
+import '../stylesheets/ui.scss'
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+const percentToDecimal = (decimal) => {
+	return ((decimal * 100) + '%')
+}
+
+const calcGoalProgress = (total, goal) => {
+	return percentToDecimal(total/goal)
+}
+
+export const SkiDayCount = ({total=70, powder=20, 
+							backcountry=10, goal=100}) => (
+		<div className="ski-day-count">
+			<div className="total-days">
+				<span>{total}</span>
+					<Calendar />
+				<span>days</span>
+			</div>
+			<div className="powder-days">
+				<span>{powder}</span>
+					<SnowFlake />
+				<span>days</span>
+			</div>
+			<div className="backcountry-days">
+				<span>{backcountry}</span>
+					<Terrain />
+				<span>days</span>
+			</div>
+			<div>
+				<span>
+					{calcGoalProgress(
+						total, 
+						goal
+					)}
+				</span>
+			</div>
+		</div>
+)
+```
+
+## Validating with React.PropTypes
+- This helps validates that the value is a certain type of primitive
+- Again, we will show createClass, ES6, and stateless ways
+- Don't forget to destructure `Proptypes` from react
+- So now if you enter an incorret primitive, it will still render
+- However, will give warning in console
+- `isRequired` gives you a console warning if value is not supplied
+
+### PropTypes with createClass method
+```js
+import { createClass, PropTypes } from 'react'
+import '../stylesheets/ui.scss'
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+export const SkiDayCount = createClass({
+  propTypes: {
+    total: PropTypes.number,
+    powder: PropTypes.number,
+    backcountry: PropTypes.number
+  }
+  getDefaultProps() {
+    return {
+      total: 50,
+      powder: 50,
+      backcountry: 15,
+      goal: 100
+    }
+  },
+  percentToDecimal(decimal) {
+    return ((decimal * 100) + '%')
+  },
+  calcGoalProgress(total, goal) {
+    return this.percentToDecimal(total/goal)
+  },
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+            <Calendar />
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+            <SnowFlake />
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.backcountry}</span>
+            <Terrain />
+          <span>days</span>
+        </div>
+        <div>
+          <span>
+            {this.calcGoalProgress(
+              this.props.total, 
+              this.props.goal
+            )}
+          </span>
+        </div>
+      </div>
+    )
+  }
+})
+
+// index.js
+// Don't forget to import
+import { SkiDayCount } from './components/SkiDayCount-createClass'
+```
+
+### PropTypes with ES6 method
+```js
+import { Component, PropTypes } from 'react'
+import '../stylesheets/ui.scss'
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+
+export class SkiDayCount extends Component {
+  percentToDecimal(decimal) {
+    return ((decimal * 100) + '%')
+  }
+  calcGoalProgress(total, goal) {
+    return this.percentToDecimal(total/goal)
+  }
+  render() {
+    return (
+      <div className="ski-day-count">
+        <div className="total-days">
+          <span>{this.props.total}</span>
+            <Calendar />
+          <span>days</span>
+        </div>
+        <div className="powder-days">
+          <span>{this.props.powder}</span>
+            <SnowFlake />
+          <span>days</span>
+        </div>
+        <div className="backcountry-days">
+          <span>{this.props.backcountry}</span>
+            <Terrain />
+          <span>days</span>
+        </div>
+        <div>
+          <span>
+            {this.calcGoalProgress(
+              this.props.total, 
+              this.props.goal
+            )}
+          </span>
+        </div>
+      </div>
+    )
+  }
+}
+
+SkiDayCount.defaultProps = { 
+  total: 50,
+  powder: 10,
+  backcountry: 15,
+  goal: 75
+}
+
+SkiDayCount.propTypes = {
+  total: PropTypes.number,
+  powder: PropTypes.number,
+  backcountry: PropTypes.number
+}
+
+// index.js
+// Don't forget to import
+import { SkiDayCount } from './components/SkiDayCount-ES6'
+```
+
+### PropTypes with  Stateless method
+- Uses the same code as ES6 method at the very bottom
+```js
+// SkiDayCount.js
+SkiDayCount.propTypes = {
+  total: PropTypes.number,
+  powder: PropTypes.number,
+  backcountry: PropTypes.number
+}
+
+// index.js
+// Don't forget to import
+import { SkiDayCount } from './components/SkiDayCount'
+```
+
+## Custom validation
+- Helps you check for other criterias you want
+- Eve added goal PropTypes:
+```js
+// SkiDayCount.js
+SkiDayCount.propTypes = {
+  total: PropTypes.number,
+  powder: PropTypes.number,
+  backcountry: PropTypes.number
+  goal: PropTypes.number
+}
+```
+
+- Eve added Proptypes in SkiDayRow.js
+```js
+import { PropTypes } from 'react'
+
+SkiDayCount.propTypes = {
+  resort: PropTypes.string.isRequired,
+  date: PropTypes.instanceOf(Date).isRequired,
+  powder: PropTypes.bool,
+  backcountry: PropTypes.bool
+}
+```
+
+- Eve added Proptypes in SkiDayList.js
+```js
+import { PropTypes } from 'react'
+
+SkiDayList.propTypes = {
+  days.PropTypes.array
+}
+```
+
+### Setting up custom validations with a function
+- Eve added Proptypes in SkiDayList.js
+- The first check is if there an array
+- The second check makes sure that it is not an empty array
+```js
+import { PropTypes } from 'react'
+
+SkiDayList.propTypes = {
+  days: function(props) {
+    if(!Array.isArray(props.days)) {
+      return new Error(
+        "SkiDayList should be an array"
+      )
+    } else if(!props.days.length) {
+      return new Error(
+        "SkiDayList must have at least one record"
+      )
+    } else {
+      return null
+    }
+  }
+}
+```
+
+## Working with state
+- State represents conditions in your application
+- You could have a state for editing/save or logged in/logged out
+- We should:
+  1. Identify the minimal representation of app state
+  2. Reduce state to as few components as possible
+  3. Avoid overwriting state variables
+- Now, we will create the App component to maintain the state 
+1. Create a new `App.js` in `./scr/components/`
+- We use `getInitialState()` to set the state with stateless functins
+```js
+// App.js
+import { createClass } from 'react'
+
+export const App = createClass({
+  getInitialState(){
+    return {
+      allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: new Date("1/2/2016"),
+				powder: true,
+				backcountry: false
+			},
+			{
+				resort: "Kirkwood",
+				date: new Date("3/28/2016"),
+				powder: false,
+				backcountry: false
+			},
+			{
+				resort: "Mt. Tallac",
+				date: new Date("4/2/2016"),
+				powder: false,
+				backcountry: true
+			}
+		]
+    }
+  },
+  render() {
+    return (
+      <div className="App">
+        {this.state.allSkiDays[0]["resort"]}
+      </div>
+    )
+  }
+})
+```
+
+2. Change index to render correct components
+```js
+import React from 'react'
+import { render } from 'react-dom'
+import './stylesheets/ui.scss'
+import { App } from './components/App'
+
+window.React = React
+
+render(
+	<App />, 
+	document.getElementById('react-container')
+)
+```
+## Passing state as props
+- Now we are passing down state to the child components
+1. Import `SkiDayList` and `SkiDayCount` components into `App.js`
+2. Change our render method
+3. Create countDays() method
+4. Add filters for countDays method
+```js
+// App.js
+import { createClass } from 'react'
+import { SkiDayList } from '.SkiDayList'
+import { SkiDayCount } from '.SkiDayCount'
+
+export const App = createClass({
+  getInitialState(){
+    return {
+      allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: new Date("1/2/2016"),
+				powder: true,
+				backcountry: false
+			},
+			{
+				resort: "Kirkwood",
+				date: new Date("3/28/2016"),
+				powder: false,
+				backcountry: false
+			},
+			{
+				resort: "Mt. Tallac",
+				date: new Date("4/2/2016"),
+				powder: false,
+				backcountry: true
+			}
+		]
+    }
+  },
+  countDays(filter) {
+    return this.state.allSkiDays.filter(function(day) {
+      if (filter) {
+        return day[filter]
+      } else {
+        return day
+      }
+    }).length
+  },
+  render() {
+    return (
+      <div className="App">
+        <SkiDayList days={this.state.allSkiDays} />
+        <SkiDayCount total={this.countDays()}
+                     powder={this.countDays("powder")}
+                     backcountry={this.countDays("backcountry")}/>
+      </div>
+    )
+  }
+})
+```
+
+### Refactoring `countDays()`
+```js
+  countDays(filter) {
+    const { allSkiDays } = this.state
+    return allSkiDays.filter((day) => (filter) ? day[filter] : day).length
+  },
+```
+
+## State with ES6 classes
+- ES6 classes has slightly different syntax for handling state
+1. Import `Component` from React
+2. Remove parens on component and commas after each methods
+3. We use `constructor` instead of `getInitialState()`
+4. Remove `getInitialState()` moethod
+### With createClass...
+```js
+// App.js
+import { createClass } from 'react'
+import { SkiDayList } from '.SkiDayList'
+import { SkiDayCount } from '.SkiDayCount'
+
+export const App = createClass({
+  getInitialState(){
+    return {
+      allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: new Date("1/2/2016"),
+				powder: true,
+				backcountry: false
+			},
+			{
+				resort: "Kirkwood",
+				date: new Date("3/28/2016"),
+				powder: false,
+				backcountry: false
+			},
+			{
+				resort: "Mt. Tallac",
+				date: new Date("4/2/2016"),
+				powder: false,
+				backcountry: true
+			}
+		]
+    }
+  },
+  countDays(filter) {
+    return this.state.allSkiDays.filter(function(day) {
+      if (filter) {
+        return day[filter]
+      } else {
+        return day
+      }
+    }).length
+  },
+  render() {
+    return (
+      <div className="App">
+        <SkiDayList days={this.state.allSkiDays} />
+        <SkiDayCount total={this.countDays()}
+                     powder={this.countDays("powder")}
+                     backcountry={this.countDays("backcountry")}/>
+      </div>
+    )
+  }
+})
+```
+
+### To ES6 Classes
+```js
+// App.js
+import { Component } from 'react'
+import { SkiDayList } from '.SkiDayList'
+import { SkiDayCount } from '.SkiDayCount'
+
+export class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+        allSkiDays: [
+        {
+          resort: "Squaw Valley",
+          date: new Date("1/2/2016"),
+          powder: true,
+          backcountry: false
+        },
+        {
+          resort: "Kirkwood",
+          date: new Date("3/28/2016"),
+          powder: false,
+          backcountry: false
+        },
+        {
+          resort: "Mt. Tallac",
+          date: new Date("4/2/2016"),
+          powder: false,
+          backcountry: true
+        }
+      ]
+    }
+  }
+  countDays(filter) {
+    return this.state.allSkiDays.filter(function(day) {
+      if (filter) {
+        return day[filter]
+      } else {
+        return day
+      }
+    }).length
+  }
+  render() {
+    return (
+      <div className="App">
+        <SkiDayList days={this.state.allSkiDays} />
+        <SkiDayCount total={this.countDays()}
+                     powder={this.countDays("powder")}
+                     backcountry={this.countDays("backcountry")}/>
+      </div>
+    )
+  }
+}
+```
