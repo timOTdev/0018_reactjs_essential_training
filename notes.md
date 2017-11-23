@@ -1671,3 +1671,465 @@ export class App extends Component {
   }
 }
 ```
+
+# 5. Using the React Router
+## Incorporating the router
+- React Router is a community built application to navigate between different components
+- We want to be able to navigate between SkiDayList and SkiDayCount components
+1. Install react-router in npm
+```js
+npm install react-router@3.0.0 --save
+```
+
+2. Render the router instead of app
+- The `/` represents the home route and `*` represents the wild card route
+- `history` tracks changes on the address bar
+```js
+// ./src/index.js
+import React from 'react'
+import { render } from 'react-dom'
+import './stylesheets/ui.scss'
+import { App } from './components/App'
+import { Router, Route, hashHistory } from 'react-router'
+
+window.React = React
+
+render(
+	<Router history={hashHistory}>
+		<Route path="/" component={App}/>
+		<Route path="*" component={Whoops404}/>
+	</Router>,
+	document.getElementById('react-container')
+)
+```
+
+3. Create new file for `Whoops404.js` and import component in `index.js`
+- We don't need parens when you are just rendering JSX elements only
+```js
+// ./src/components/Whoops404.js
+export const Whoops404 = () => 
+	<div>
+		<h1>Whoops, route not found</h1>
+  </div>
+  
+// ./src/index.js
+import React from 'react'
+import { render } from 'react-dom'
+import './stylesheets/ui.scss'
+import { App } from './components/App'
+import { Whoops404 } from './components/Whoops404'
+import { Router, Route, hashHistory } from 'react-router'
+
+window.React = React
+
+render(
+	<Router history={hashHistory}>
+		<Route path="/" component={App}/>
+		<Route path="*" component={Whoops404}/>
+	</Router>,
+	document.getElementById('react-container')
+)
+```
+
+## Setting up routes
+- We set up the home and the wild card routes
+- Now we want to separate SkiDayList and SkiDayCount components separately
+- We also want to add a component to let you add new ski days
+1. Create AddDayForm component
+- We are just going to render an `h1` for now
+```js
+// ./src/components/AddDayForm.js
+export const AddDayForm = () => (
+	<h1>Add A Day</h1>
+)
+```
+
+2. Add routes for our different components
+- We now add the list-days and add-day routes which is linked inside the App component
+```js
+// ./index.js
+import React from 'react'
+import { render } from 'react-dom'
+import './stylesheets/ui.scss'
+import { App } from './components/App'
+import { Whoops404 } from './components/Whoops404'
+import { Router, Route, hashHistory } from 'react-router'
+
+window.React = React
+
+render(
+	<Router history={hashHistory}>
+		<Route path="/" component={App}/>
+		<Route path="list-days" component={App} />
+		<Route path="add-day" component={App} />
+		<Route path="*" component={Whoops404} />
+	</Router>,
+	document.getElementById('react-container')
+)
+```
+
+3. Set up the route under the render() method
+- The logic will display depending on the address route we are on
+- The logic has 2 ternary operators so look carefully
+- Don't forget to import AddDayForm
+```js
+// ./src/components/App.js
+import { Component } from 'react'
+import { SkiDayList } from './SkiDayList'
+import { SkiDayCount } from './SkiDayCount'
+import { AddDayForm } from './AddDayForm'
+
+export class App extends Component {
+	constructor(props) {
+		super(props)
+		this.state = {
+			allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: new Date("1/2/2016"),
+				powder: true,
+				backcountry: false
+			},
+			{
+				resort: "Kirkwood",
+				date: new Date("3/28/2016"),
+				powder: false,
+				backcountry: false
+			},
+			{
+				resort: "Mt. Tallac",
+				date: new Date("4/2/2016"),
+				powder: false,
+				backcountry: true
+			}
+		]
+		}
+	}
+	countDays(filter) {
+		const { allSkiDays } = this.state
+		return allSkiDays.filter(
+			(day) => (filter) ? day[filter] : day).length
+	}
+	render() {
+		return (
+			<div className="app">
+        {(this.props.location.pathname === "/") ?
+          <SkiDayCount total={this.countDays()}
+                powder={this.countDays(
+                    "powder"
+                  )}
+                backcountry={this.countDays(
+                    "backcountry"
+                  )}/> :
+        (this.props.location.pathname === "/add-day") ?
+          <AddDayForm /> :
+          <SkiDayList days={this.state.allSkiDays}/>				 
+			}
+			</div>
+		)
+	}
+}
+```
+
+## Navigating with the link component
+- Now we are making a navigation for users so they can click between links
+1. Create a new component called `Menu.js`
+- We are linking them to the routes we created
+- We are adding icons also
+- `activeClassName` will show which link is active
+- We import `Link` component from 'react-router'
+```js
+// ./src/components/Menu.js
+import { Link } from 'react-router'
+import HomeIcon from 'react-icons/lib/fa/home'
+import AddDayIcon from 'react-icons/lib/fa/calendar-plus-o'
+import ListDaysIcon from 'react-icons/lib/fa/table'
+
+export const Menu = () => 
+	<nav className="menu">
+		<Link to="/" activeClassName="selected">
+			<HomeIcon />
+		</Link>
+		<Link to="/add-day" activeClassName="selected">
+			<AddDayIcon />
+		</Link>
+		<Link to="/list-days" activeClassName="selected">
+			<ListDaysIcon />
+		</Link>
+	</nav>
+```
+
+2. We need to render our `Menu` in `App.js`
+```js
+import { Component } from 'react'
+import { SkiDayList } from './SkiDayList'
+import { SkiDayCount } from './SkiDayCount'
+import { AddDayForm } from './AddDayForm'
+import { Menu } from './Menu'
+
+export class App extends Component {
+	constructor(props) {
+		super(props)
+		this.state = {
+			allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: new Date("1/2/2016"),
+				powder: true,
+				backcountry: false
+			},
+			{
+				resort: "Kirkwood",
+				date: new Date("3/28/2016"),
+				powder: false,
+				backcountry: false
+			},
+			{
+				resort: "Mt. Tallac",
+				date: new Date("4/2/2016"),
+				powder: false,
+				backcountry: true
+			}
+		]
+		}
+	}
+	countDays(filter) {
+		const { allSkiDays } = this.state
+		return allSkiDays.filter(
+			(day) => (filter) ? day[filter] : day).length
+	}
+	render() {
+		return (
+			<div className="app">
+			<Menu />
+			{(this.props.location.pathname === "/") ?
+			  <SkiDayCount total={this.countDays()}
+							 powder={this.countDays(
+							 		"powder"
+							 	)}
+							 backcountry={this.countDays(
+							 		"backcountry"
+							 	)}/> :
+			 (this.props.location.pathname === "/add-day") ?
+			 	<AddDayForm /> :
+			 	<SkiDayList days={this.state.allSkiDays}/>				 
+			}
+					
+			</div>
+		)
+	}
+}
+```
+
+## Using route parameters
+- We are going to add filters for powder or backcountry
+1. Change SkiDayList Component
+- We need to use brackets since it's not just JSX elements
+- `colSpan` is for how much column space it takes
+- We added `filteredDays` component for the filter feature
+```js
+// ./src/components/SkiDayList.js
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+import { SkiDayRow } from './SkiDayRow'
+import { PropTypes } from 'react'
+import { Link } from 'react-router'
+
+export const SkiDayList = ({days, filter}) => {
+  const filteredDays = (!filter || 
+  		!filter.match(/powder|backcountry/))?
+  		days:
+  		days.filter(day => day[filter])
+
+  return (
+  	<div className="ski-day-list">
+	<table>
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Resort</th>
+				<th>Powder</th>
+				<th>Backcountry</th>
+			</tr>
+			<tr>
+				<td colSpan={4}>
+					<Link to="/list-days">
+						All Days
+					</Link>
+					<Link to="/list-days/powder">
+						Powder Days
+					</Link>
+					<Link to="/list-days/backcountry">
+						Backcountry Days
+					</Link>
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+			{filteredDays.map((day, i) =>
+				<SkiDayRow key={i}
+						   {...day}/>	
+				)}
+		</tbody>
+
+	</table>
+	</div>
+)
+}  
+
+SkiDayList.propTypes = {
+	days: function(props) {
+		if(!Array.isArray(props.days)) {
+			return new Error(
+				"SkiDayList should be an array"	
+				)
+		} else if(!props.days.length) {
+			return new Error(
+				"SkiDayList must have at least one record"
+				)
+		} else {
+			return null
+		}
+	}
+}
+```
+
+2. Fix render in App.js
+```js
+// ./src/components/App.js
+import { Component } from 'react'
+import { SkiDayList } from './SkiDayList'
+import { SkiDayCount } from './SkiDayCount'
+import { AddDayForm } from './AddDayForm'
+import { Menu } from './Menu'
+
+export class App extends Component {
+	constructor(props) {
+		super(props)
+		this.state = {
+			allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: new Date("1/2/2016"),
+				powder: true,
+				backcountry: false
+			},
+			{
+				resort: "Kirkwood",
+				date: new Date("3/28/2016"),
+				powder: false,
+				backcountry: false
+			},
+			{
+				resort: "Mt. Tallac",
+				date: new Date("4/2/2016"),
+				powder: false,
+				backcountry: true
+			}
+		]
+		}
+	}
+	countDays(filter) {
+		const { allSkiDays } = this.state
+		return allSkiDays.filter(
+			(day) => (filter) ? day[filter] : day).length
+	}
+	render() {
+		return (
+			<div className="app">
+			<Menu />
+			{(this.props.location.pathname === "/") ?
+			  <SkiDayCount total={this.countDays()}
+							 powder={this.countDays(
+							 		"powder"
+							 	)}
+							 backcountry={this.countDays(
+							 		"backcountry"
+							 	)}/> :
+			 (this.props.location.pathname === "/add-day") ?
+			 	<AddDayForm /> :
+			 	<SkiDayList days={this.state.allSkiDays}
+			 				filter={this.props.params.filter}/>				 
+			}
+					
+			</div>
+		)
+	}
+}
+```
+3. Add another route in index.js
+```js
+import React from 'react'
+import { render } from 'react-dom'
+import './stylesheets/ui.scss'
+import { App } from './components/App'
+import { Whoops404 } from './components/Whoops404'
+import { Router, Route, hashHistory } from 'react-router'
+
+window.React = React
+
+render(
+	<Router history={hashHistory}>
+		<Route path="/" component={App}/>
+		<Route path="list-days" component={App}>
+			<Route path=":filter" component={App} />
+		</Route>
+		<Route path="add-day" component={App} />
+		<Route path="*" component={Whoops404}/>
+	</Router>,
+	document.getElementById('react-container')
+)
+```
+
+## Nesting routes
+- We are going to learn how to nest routes
+- Eve is making Rock Appreciation Society
+- Routes come from routes.js file
+1. We make left and right side navigation
+```js
+// ./src/components/index.js
+import MainMenu from './ui/MainMenu'
+
+export const Left = ({ children }) => 
+	<div className="page">
+		<MainMenu className="main-menu"/>
+		{children}
+	</div>
+
+export const Right = ({ children }) => 
+	<div className="page">
+		{children}
+		<MainMenu className="main-menu"/>
+	</div>
+
+export const Whoops404 = ({ location }) =>
+    <div>
+        <h1>Whoops, resource not found</h1>
+        <p>Could not find {location.pathname}</p>
+    </div>
+```
+
+2. We add routes to handle children
+```js
+// ./src/components/routes.js
+import React from 'react'
+import { Router, Route, hashHistory } from 'react-router'
+import Home from './components/ui/Home'
+import About from './components/ui/About'
+import MemberList from './components/ui/MemberList'
+import  { Left, Right, Whoops404  } from './components'
+
+const routes = (
+    <Router history={hashHistory}>
+        <Route path="/" component={Home} />
+        <Route path="/" component={Left}>
+        	<Route path="about" component={About} />
+        	<Route path="members" component={MemberList} />
+        </Route>
+        <Route path="*" component={Whoops404} />
+    </Router>
+)
+
+export default routes
+```
