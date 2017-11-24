@@ -2133,3 +2133,724 @@ const routes = (
 
 export default routes
 ```
+
+# 6. Forms and Refs
+## Creating a form component
+- We are now going to add a form to add-day route
+- This allows us to add resort, date, powder, and backcountry to our list
+1. We make a class component
+2. Make a form with labels and input
+  - We use `htmlFor` refers to the id of the input 
+  - We wrap checkboxes with divs to appear nicer
+3. Populate data from default props
+  - We also destructure our props at the top
+  - Use `defaultValue` to set default strings
+  - Use `defaultChecked` to set default checkboxes
+```js
+import { PropTypes, Component } from 'react'
+
+export class AddDayForm extends Component {
+	render() {
+
+		const { resort, date, powder, backcountry } = this.props 
+
+		return (
+			<form className="add-day-form">
+
+				<label htmlFor="resort">Resort Name</label>
+				<input id="resort" 
+					   type="text" 
+					   required 
+					   defaultValue={resort}/>
+
+				<label htmlFor="date">Date</label>
+				<input id="date" 
+					   type="date" 
+					   required 
+					   defaultValue={date}/>
+
+				<div>
+					<input id="powder" 
+						   type="checkbox" 
+						   defaultChecked={powder}	/>
+					<label htmlFor="powder">Powder Day</label>
+				</div>
+
+				<div>	
+					<input id="backcountry" 
+						   type="checkbox"
+						   defaultChecked={backcountry} />
+					<label htmlFor="backcountry">
+						Backcountry Day
+					</label>
+				</div>
+			</form>
+		)
+	}
+}
+
+AddDayForm.defaultProps = {
+	resort: "Kirkwood",
+	date: "2017-02-12",
+	powder: true,
+	backcountry: false
+}
+
+
+AddDayForm.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool.isRequired,
+	backcountry: PropTypes.bool.isRequired
+}
+```
+
+## Using refs in class components
+- Props are how children components interacts with parent components
+- Use `ref` for parent components to pull values from children components
+1. Add `ref` so we can get values from children components
+2. Add a button to add values
+3. Capture values with `submit()` function
+  - We use `e.preventDefault()` to prevent default behavior of the form
+  - Default is clearing out the form
+  - Use `.value` to grab values of strings
+  - Use `.checked` to grab values of checkboxes
+4. Add `onSubmit` to add a trigger
+5. Add a constructor for `submit()`
+  - We need to bind our custom method in the constructor
+  - This is necessary since we are using an ES6's class component
+```js
+import { PropTypes, Component } from 'react'
+
+export class AddDayForm extends Component {
+	
+	constructor(props) {
+		super(props)
+		this.submit = this.submit.bind(this)
+	}
+
+	submit(e) {
+		e.preventDefault()
+		console.log('resort', this.refs.resort.value)
+		console.log('date', this.refs.date.value)
+		console.log('powder', this.refs.powder.checked)
+		console.log('backcountry', this.refs.backcountry.checked)
+
+	}
+
+	render() {
+
+		const { resort, date, powder, backcountry } = this.props 
+
+		return (
+			<form onSubmit={this.submit} className="add-day-form">
+
+				<label htmlFor="resort">Resort Name</label>
+				<input id="resort" 
+					   type="text" 
+					   required 
+					   defaultValue={resort}
+					   ref="resort"/>
+
+				<label htmlFor="date">Date</label>
+				<input id="date" 
+					   type="date" 
+					   required 
+					   defaultValue={date}
+					   ref="date"/>
+
+				<div>
+					<input id="powder" 
+						   type="checkbox" 
+						   defaultChecked={powder}	
+						   ref="powder"/>
+					<label htmlFor="powder">Powder Day</label>
+				</div>
+
+				<div>	
+					<input id="backcountry" 
+						   type="checkbox"
+						   defaultChecked={backcountry} 
+						   ref="backcountry"/>
+					<label htmlFor="backcountry">
+						Backcountry Day
+					</label>
+				</div>
+				<button>Add Day</button>
+			</form>
+		)
+	}
+}
+
+AddDayForm.defaultProps = {
+	resort: "Kirkwood",
+	date: "2017-02-12",
+	powder: true,
+	backcountry: false
+}
+
+
+AddDayForm.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool.isRequired,
+	backcountry: PropTypes.bool.isRequired
+}
+```
+
+## Using refs in stateless components
+- With stateless functional components, you don't have access to `this` keyword
+- We can use callback functions as `ref` to capture the values from each field
+1. Write an stateless function and put elements inside
+  - Put the `submit` function and `return()` element inside the stateless function
+  - Put the arguments of the destructured elements in the parameters
+2. Clear instances of `this`
+  - Remove `this` from `onSubmit`
+3. Changing the refs inside each input
+  - We do the same for all 4 inputs
+  - Essentially we are making a variable that refers to the `ref`
+  - The variable then holds the value which we pull in the `submit` function
+4. Replace the `this.refs` in the submit function
+5. Make our underscore values available in our function
+6. Remove the export class
+
+```js
+import { PropTypes, Component } from 'react'
+
+export const AddDayForm = ({ resort, 
+							 date, 
+							 powder, 
+							 backcountry }) => {
+	
+	let _resort, _date, _powder, _backcountry
+	
+	const submit = (e) => {
+		e.preventDefault()
+		console.log('resort', _resort.value)
+		console.log('date', _date.value)
+		console.log('powder', _powder.checked)
+		console.log('backcountry', _backcountry.checked)
+
+	}
+
+	return (
+		<form onSubmit={submit} className="add-day-form">
+
+			<label htmlFor="resort">Resort Name</label>
+			<input id="resort" 
+				   type="text" 
+				   required 
+				   defaultValue={resort}
+				   ref={input => _resort = input}/>
+
+			<label htmlFor="date">Date</label>
+			<input id="date" 
+				   type="date" 
+				   required 
+				   defaultValue={date}
+				   ref={input => _date = input}/>
+
+			<div>
+				<input id="powder" 
+					   type="checkbox" 
+					   defaultChecked={powder}	
+					   ref="powder"
+					   ref={input => _powder = input}/>
+				<label htmlFor="powder">Powder Day</label>
+			</div>
+
+			<div>	
+				<input id="backcountry" 
+					   type="checkbox"
+					   defaultChecked={backcountry} 
+					   ref="backcountry"
+					   ref={input => _backcountry = input}/>
+				<label htmlFor="backcountry">
+					Backcountry Day
+				</label>
+			</div>
+			<button>Add Day</button>
+		</form>
+	)
+}
+
+AddDayForm.defaultProps = {
+	resort: "Kirkwood",
+	date: "2017-02-12",
+	powder: true,
+	backcountry: false
+}
+
+
+AddDayForm.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool.isRequired,
+	backcountry: PropTypes.bool.isRequired
+}
+```
+
+## Two-way function binding
+- We now need to pass the values up to the parent
+- We also need to render existing values and new days users input
+1. We will display a string for date
+  - We removed the date formate from the `td`
+  - We changed the default prop type to string
+```js
+// SkiDayRow.js
+import Terrain from 'react-icons/lib/md/terrain'
+import SnowFlake from 'react-icons/lib/ti/weather-snow'
+import Calendar from 'react-icons/lib/fa/calendar'
+import { PropTypes } from 'react'
+
+export const SkiDayRow = ({resort, date, 
+							powder, backcountry}) => (
+	<tr>
+		<td>
+			{date}
+		</td>
+		<td>
+			{resort}
+		</td>
+		<td>
+			{(powder) ? <SnowFlake/> : null}
+		</td>
+		<td>
+			{(backcountry) ? <Terrain /> : null}
+		</td>
+	</tr>						
+
+)
+
+SkiDayRow.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool,
+	backcountry: PropTypes.bool
+}
+```
+2. Make new object with values that user inputs
+  - We made a new `onNewDay` object to store the user values
+  - We also reset the values to blank strings and false
+  - So users can add new values
+  - We also need to add `onNewDay` component to our arguments
+  - Removed `Component` from the import since we no longer use it
+```js
+// AddDayForm.js
+import { PropTypes } from 'react'
+
+export const AddDayForm = ({ resort, 
+							 date, 
+							 powder, 
+							 backcountry,
+							 onNewDay }) => {
+	
+	let _resort, _date, _powder, _backcountry
+	
+	const submit = (e) => {
+		e.preventDefault()
+		onNewDay({
+			resort: _resort.value,
+			date: _date.value,
+			powder: _powder.checked,
+			backcountry: _backcountry.checked
+		})
+		_resort.value = ''
+		_date.value = ''
+		_powder.checked = false
+		_backcountry.checked = false
+
+	}
+
+	return (
+		<form onSubmit={submit} className="add-day-form">
+
+			<label htmlFor="resort">Resort Name</label>
+			<input id="resort" 
+				   type="text" 
+				   required 
+				   defaultValue={resort}
+				   ref={input => _resort = input}/>
+
+			<label htmlFor="date">Date</label>
+			<input id="date" 
+				   type="date" 
+				   required 
+				   defaultValue={date}
+				   ref={input => _date = input}/>
+
+			<div>
+				<input id="powder" 
+					   type="checkbox" 
+					   defaultChecked={powder}	
+					   ref="powder"
+					   ref={input => _powder = input}/>
+				<label htmlFor="powder">Powder Day</label>
+			</div>
+
+			<div>	
+				<input id="backcountry" 
+					   type="checkbox"
+					   defaultChecked={backcountry} 
+					   ref="backcountry"
+					   ref={input => _backcountry = input}/>
+				<label htmlFor="backcountry">
+					Backcountry Day
+				</label>
+			</div>
+			<button>Add Day</button>
+		</form>
+	)
+}
+
+AddDayForm.defaultProps = {
+	resort: "Kirkwood",
+	date: "2017-02-12",
+	powder: true,
+	backcountry: false
+}
+
+
+AddDayForm.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool.isRequired,
+	backcountry: PropTypes.bool.isRequired
+}
+```
+
+3. We change the state of our list and adding component to add new days
+  - Removed all the ski days only to 1 item
+  - We changed it so it's just a string
+  - Added `onNewDay` component to our `AddDayForm` component
+  - Added `addDay` method to add new days and reset state
+  - Eve use spread operator to spread existing data and then add on user added days
+  - Bind the `addDay` function to the constructor
+```js
+// App.js
+import { Component } from 'react'
+import { SkiDayList } from './SkiDayList'
+import { SkiDayCount } from './SkiDayCount'
+import { AddDayForm } from './AddDayForm'
+import { Menu } from './Menu'
+
+export class App extends Component {
+	constructor(props) {
+		super(props)
+		this.state = {
+			allSkiDays: [
+			{
+				resort: "Squaw Valley",
+				date: "2016-01-02",
+				powder: true,
+				backcountry: false
+			}
+		]
+		}
+		this.addDay = this.addDay.bind(this)
+	}
+
+	addDay(newDay) {
+		this.setState({
+			allSkiDays: [
+				...this.state.allSkiDays,
+				newDay
+			]
+		})
+	}
+
+	countDays(filter) {
+		const { allSkiDays } = this.state
+		return allSkiDays.filter(
+			(day) => (filter) ? day[filter] : day).length
+	}
+
+	render() {
+		return (
+			<div className="app">
+			<Menu />
+			{(this.props.location.pathname === "/") ?
+			  <SkiDayCount total={this.countDays()}
+							 powder={this.countDays(
+							 		"powder"
+							 	)}
+							 backcountry={this.countDays(
+							 		"backcountry"
+							 	)}/> :
+			 (this.props.location.pathname === "/add-day") ?
+			 	<AddDayForm onNewDay={this.addDay}/> :
+			 	<SkiDayList days={this.state.allSkiDays}
+			 				filter={this.props.params.filter}/>				 
+			}
+					
+			</div>
+		)
+	}
+}
+```
+
+## Adding an autocomplete component
+- We are going to add an autocomplete component and an image
+1. Created `Autocomplete` class to hold our components
+  - Don't to forget export `Component`
+  - We have a data list with all the Tahoe resorts
+  - We add `datalist` which gives it the autocomplete function
+2. Grab user-input value and use set/get
+  - We grab the value of the input with `ref`
+  - I'm still not clear about the set and get yet
+  - I think it grabs our choice in the autocomplete and sets it as the ref
+  - It also updates that field to our choice as well
+```js
+// AddDayForm.js
+import { PropTypes, Component } from 'react'
+
+const tahoeResorts = [
+	"Alpine Meadows",
+	"Boreal",
+	"Diamond Peak",
+	"Donner Ski Ranch", 
+	"Heavenly", 
+	"Homewood",
+	"Kirkwood",
+	"Mt. Rose", 
+	"Northstar",
+	"Squaw Valley",
+	"Sugar Bowl"
+]
+
+class Autocomplete extends Component {
+	
+	get value() {
+		return this.refs.inputResort.value
+	}
+
+	set value(inputValue) {
+		this.refs.inputResort.value = inputValue
+	}
+
+	render() {
+		return (
+			<div>
+				<input ref="inputResort"
+					   type="text" 
+					   list="tahoe-resorts" />
+				<datalist id="tahoe-resorts">
+					{this.props.options.map(
+						(opt, i) => 
+						<option key={i}>{opt}</option>)}
+				</datalist>
+			</div>
+		)
+	}
+}
+
+export const AddDayForm = ({ resort, 
+							 date, 
+							 powder, 
+							 backcountry,
+							 onNewDay }) => {
+	
+	let _resort, _date, _powder, _backcountry
+	
+	const submit = (e) => {
+		e.preventDefault()
+		onNewDay({
+			resort: _resort.value,
+			date: _date.value,
+			powder: _powder.checked,
+			backcountry: _backcountry.checked
+		})
+		_resort.value = ''
+		_date.value = ''
+		_powder.checked = false
+		_backcountry.checked = false
+
+	}
+
+	return (
+		<form onSubmit={submit} className="add-day-form">
+
+			<label htmlFor="resort">Resort Name</label>
+			<Autocomplete options={tahoeResorts}
+				   		  ref={input => _resort = input}/>
+
+			<label htmlFor="date">Date</label>
+			<input id="date" 
+				   type="date" 
+				   required 
+				   defaultValue={date}
+				   ref={input => _date = input}/>
+
+			<div>
+				<input id="powder" 
+					   type="checkbox" 
+					   defaultChecked={powder}	
+					   ref="powder"
+					   ref={input => _powder = input}/>
+				<label htmlFor="powder">Powder Day</label>
+			</div>
+
+			<div>	
+				<input id="backcountry" 
+					   type="checkbox"
+					   defaultChecked={backcountry} 
+					   ref="backcountry"
+					   ref={input => _backcountry = input}/>
+				<label htmlFor="backcountry">
+					Backcountry Day
+				</label>
+			</div>
+			<button>Add Day</button>
+		</form>
+	)
+}
+
+AddDayForm.defaultProps = {
+	resort: "Kirkwood",
+	date: "2017-02-12",
+	powder: true,
+	backcountry: false
+}
+
+
+AddDayForm.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool.isRequired,
+	backcountry: PropTypes.bool.isRequired
+}
+```
+
+3. We then set the `render()` to return `Autocomplete` component
+```js
+// AddDayForm.js
+import { PropTypes, Component } from 'react'
+
+const tahoeResorts = [
+	"Alpine Meadows",
+	"Boreal",
+	"Diamond Peak",
+	"Donner Ski Ranch", 
+	"Heavenly", 
+	"Homewood",
+	"Kirkwood",
+	"Mt. Rose", 
+	"Northstar",
+	"Squaw Valley",
+	"Sugar Bowl"
+]
+
+class Autocomplete extends Component {
+	
+	get value() {
+		return this.refs.inputResort.value
+	}
+
+	set value(inputValue) {
+		this.refs.inputResort.value = inputValue
+	}
+
+	render() {
+		return (
+			<div>
+				<input ref="inputResort"
+					   type="text" 
+					   list="tahoe-resorts" />
+				<datalist id="tahoe-resorts">
+					{this.props.options.map(
+						(opt, i) => 
+						<option key={i}>{opt}</option>)}
+				</datalist>
+			</div>
+		)
+	}
+}
+
+export const AddDayForm = ({ resort, 
+							 date, 
+							 powder, 
+							 backcountry,
+							 onNewDay }) => {
+	
+	let _resort, _date, _powder, _backcountry
+	
+	const submit = (e) => {
+		e.preventDefault()
+		onNewDay({
+			resort: _resort.value,
+			date: _date.value,
+			powder: _powder.checked,
+			backcountry: _backcountry.checked
+		})
+		_resort.value = ''
+		_date.value = ''
+		_powder.checked = false
+		_backcountry.checked = false
+
+	}
+
+	return (
+		<form onSubmit={submit} className="add-day-form">
+
+			<label htmlFor="resort">Resort Name</label>
+			<Autocomplete options={tahoeResorts}
+				   		  ref={input => _resort = input}/>
+
+			<label htmlFor="date">Date</label>
+			<input id="date" 
+				   type="date" 
+				   required 
+				   defaultValue={date}
+				   ref={input => _date = input}/>
+
+			<div>
+				<input id="powder" 
+					   type="checkbox" 
+					   defaultChecked={powder}	
+					   ref="powder"
+					   ref={input => _powder = input}/>
+				<label htmlFor="powder">Powder Day</label>
+			</div>
+
+			<div>	
+				<input id="backcountry" 
+					   type="checkbox"
+					   defaultChecked={backcountry} 
+					   ref="backcountry"
+					   ref={input => _backcountry = input}/>
+				<label htmlFor="backcountry">
+					Backcountry Day
+				</label>
+			</div>
+			<button>Add Day</button>
+		</form>
+	)
+}
+
+AddDayForm.defaultProps = {
+	resort: "Kirkwood",
+	date: "2017-02-12",
+	powder: true,
+	backcountry: false
+}
+
+
+AddDayForm.propTypes = {
+	resort: PropTypes.string.isRequired,
+	date: PropTypes.string.isRequired,
+	powder: PropTypes.bool.isRequired,
+	backcountry: PropTypes.bool.isRequired
+}
+```
+
+4.. We also add an image
+  - In `index.scss`, you can link the image with 
+  - Don't forget to import in `index.js` with `import './stylesheets/index.scss'`
+```css
+// index.scss
+div.app {
+ background-image:url('http://localhost:3000/assets/img/rowdy.jpg');
+ background-size: cover;
+ background-position: center;
+}
+```
