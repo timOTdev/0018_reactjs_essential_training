@@ -1,6 +1,6 @@
 # Learning React.js
 - Eve Porcello
-- Started 11-16-2017
+- Started 11-16-2017 Ended 11-25-2017
 
 ## Welcome
 - Created at Facebook
@@ -2854,3 +2854,367 @@ div.app {
  background-position: center;
 }
 ```
+
+# 7. The Component Lifecycle
+## Challenge: Building the Member component
+- We will be building a member profile in `Member.js`
+- We are building each piece at a time
+1. Render a name in the `<h1>`
+  - Set up the properties by destructure our props
+2. Render a react-icon
+3. Populate an image based on a thumbnail image
+4. `<a>` tag that has email
+5. Add a property that makes the person an admin
+6. Don't forget to import component in `index.js`
+```js
+// Member.js
+import FaShield from 'react-icons/lib/fa/shield' 
+import { Component } from 'react'
+
+class Member extends Component {
+  render() {
+    const { name, thumbnail, email, admin, makeAdmin } = this.props
+      return (
+          <div className="member">
+              <h1>{name} {(admin) ? <FaShield /> : null}</h1>
+              <a onClick={makeAdmin}>Make Admin</a>
+              <img src={thumbnail} alt="profile picture" />
+              <p><a href={`mailto:${email}`}>{email}</a></p>
+          </div>
+      )
+  }
+}
+
+export default Member
+```
+
+## Challenge: Building the MemberList Component
+- Now we are rendering 3 members from `MemberList.js`
+- Don't forget to render and import in `index.js`
+1. Destructure members from state and loop over them
+  - The spread operator is to go through all the members, regardless of how many are in state
+  - Notice we have hard-coded members here
+```js
+// MemberList.js
+import { Component } from 'react'
+import fetch from 'isomorphic-fetch'
+import Member from './Member'
+
+class MemberList extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            members: [
+            {
+                name: "Joe Wilson",
+                email: "joe.wilson@example.com",
+                thumbnail: "https://randomuser.me/api/portraits/men/53.jpg"
+            },
+            {
+                name: "Stacy Gardner",
+                email: "stacy.gardner@example.com",
+                thumbnail: "https://randomuser.me/api/portraits/women/74.jpg"
+            },
+            {
+                name: "Billy Young",
+                email: "billy.young@example.com",
+                thumbnail: "https://randomuser.me/api/portraits/men/34.jpg"
+            }
+          ]
+        }
+    }
+
+    render() {
+    	const { members } = this.state
+        return (
+            <div className="member-list">
+                <h1>Society Members</h1>
+                {members.map(
+                	(data, i) => 
+                		<Member key={i} 
+                				    onClick={email => console.log(email)}
+                            {...data} />
+                	 )}
+            </div>
+        )
+    }
+}
+
+export default MemberList
+```
+
+## Understanding the mounting lifecycle
+- We can execute codes during different points of the component's lifetime
+- We are grabbing data from [randomuser.me](https://randomuser.me/)
+1. We set members to an empty array and add loading state false
+2. We add fetch to grab data from the api
+3. Add `componentDidMount()`, which fires when `render()` is fired
+4. Add fetch method
+  - From the results, we set the state with the members that comes back from the API
+5. Add a loading and render feature
+  - Shows loading when it loads data and show how many members
+  - We also load the API property keys to render random users
+  - Will error 0 members if they're is no data
+```js
+// MemberList.js
+import { Component } from 'react'
+import fetch from 'isomorphic-fetch'
+import Member from './Member'
+
+class MemberList extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            members: [],
+            loading: false
+        }
+    }
+
+    componentDidMount() {
+        this.setState({loading: true})
+        fetch('https://api.randomuser.me/?nat=US&results=12')
+            .then(response => response.json())
+            .then(json => json.results)
+            .then(members => this.setState({
+                members,
+                loading: false
+            }))
+    }
+
+    render() {
+        const { members, loading  } = this.state
+        return (
+            <div className="member-list">
+            	<h1>Society Members</h1>
+
+                {(loading) ?
+                    <span>loading...</span> :
+                    <span>{members.length} members</span>
+                }
+
+                {(members.length) ?
+                    members.map(
+                    (member, i) => 
+                        <Member key={i} 
+                                name={member.name.first + ' ' + member.name.last}
+                                email={member.email}
+                                thumbnail={member.picture.thumbnail} />
+                    ):
+                    <span>Currently 0 Members</span>
+                }
+            </div>
+        )    
+   }     
+}
+
+export default MemberList
+```
+
+6. We add a gray background before component mounts
+```js
+// Member.js
+import FaShield from 'react-icons/lib/fa/shield' 
+import { Component } from 'react'
+
+class Member extends Component {
+
+	componentWillMount() {
+		this.style = {
+			backgroundColor: 'gray'
+		}
+	}
+
+	render() {
+
+		const { name, thumbnail, email, admin, makeAdmin } = this.props
+		return (
+			<div className="member">
+				<h1>{name} {(admin) ? <FaShield /> : null}</h1>
+				<a onClick={makeAdmin}>Make Admin</a>
+				<img src={thumbnail} alt="profile picture" />
+				<p><a href={`mailto:${email}`}>{email}</a></p>
+
+			</div>
+		)
+	}
+}
+
+export default Member
+```
+
+## Understanding the updating lifecycle
+- We will be able to make and remove admins
+1. Render routes
+  - Our pages should be working now
+```js
+import React from 'react'
+import { render } from 'react-dom'
+import routes from './routes'
+
+window.React = React
+
+render(
+	routes, 
+	document.getElementById('react-container'))
+```
+2. Create administrators state
+3. Create `makeAdmin()` and `removeAdmin()`
+  - Don't forget to bind the method
+  - Didn't understand why Eve used `email` as an argument
+4. Add `admin` property to the render method
+  - The `.some()` checks to see if there is match in the members array
+5. Add `makeAdmin()` and `removeAdmin()` to the render method
+```js
+// MemberList.js
+import { Component } from 'react'
+import fetch from 'isomorphic-fetch'
+import Member from './Member'
+
+class MemberList extends Component {
+
+    constructor(props) {
+        super(props)
+        this.state = {
+            members: [],
+            loading: false,
+            administrators: []
+        }
+        this.makeAdmin = this.makeAdmin.bind(this)
+        this.removeAdmin = this.removeAdmin.bind(this)
+    }
+
+        componentWillUpdate(nextProps) {
+        this.style = { backgroundColor: (nextProps.admin) ? 'green' : 'purple' }
+    }
+
+    componentDidUpdate(prevProps) {
+       console.log(`${prevProps.name} updated`, prevProps.admin, this.props.admin)
+    }
+
+    componentDidMount() {
+        this.setState({loading: true})
+        fetch('https://api.randomuser.me/?nat=US&results=12')
+            .then(response => response.json())
+            .then(json => json.results)
+            .then(members => this.setState({
+                members,
+                loading: false
+            }))
+    }
+
+    makeAdmin(email) {
+        const administrators = [
+            ...this.state.administrators,
+            email
+        ]
+        this.setState({administrators})
+    }
+
+    removeAdmin(email) {
+        const administrators = this.state.administrators.filter(
+            adminEmail => adminEmail !== email
+        )
+        this.setState({administrators})
+    }
+
+
+    render() {
+    	const { administrators, members, loading } = this.state
+        return (
+            <div className="member-list">
+                <h1>Society Members</h1>
+
+                {(loading) ?
+                    <span>loading...</span> :
+                    <span>{members.length} members</span>
+                }
+
+                {(members.length) ?
+                   members.map(
+                	(member, i) => 
+                		<Member key={i} 
+                                admin={administrators.some(
+                                    adminEmail => adminEmail === member.email
+                                    )}
+                                name={member.name.first + ' ' + member.name.last} 
+                                email={member.email}
+                                thumbnail={member.picture.thumbnail}
+                                makeAdmin={this.makeAdmin}
+                                removeAdmin={this.removeAdmin}/>
+                	 ):
+                   <span>Currently 0 Members </span>
+               }
+            </div>
+        )
+    }
+}
+
+export default MemberList
+```
+
+6. Add button to be dynamic about a person's admin status
+  - Button displays add/remove admin depending on status
+7. Add lifecycle method `componentWillUpdate()`
+  - Once component updates, it will turn green
+8. Add `shouldComponentUpdate()`
+  - Change background to green only to the person being made admin
+  - She also used `nextProps` in this life cycle
+  - The logic is hard to follow so need to look at it a couple times
+9. Add `nextProps` argument
+  - Will make admins green and undo admins to purple
+  - But it will keep the purple background after removing admin
+```js
+// Member.js
+import FaShield from 'react-icons/lib/fa/shield' 
+import { Component } from 'react'
+
+class Member extends Component {
+
+  componentWillMount() {
+  	this.style = {
+  		backgroundColor: 'gray'
+  	}
+  }	
+
+  componentWillUpdate(nextProps) {
+    this.style = {
+      backgroundColor: (nextProps.admin) ? 'green' : 'purple'
+    }
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.admin !== nextProps.admin
+  }
+
+  render() {
+
+	const { name, thumbnail, email, admin, 
+          makeAdmin, removeAdmin } = this.props
+    return (
+        <div className="member" style={this.style}>
+        	<h1>{name} {(admin) ? <FaShield /> : null}</h1>
+          {(admin) ? 
+            <a onClick={() => removeAdmin(email)}>Remove Admin</a> :
+            <a onClick={() => makeAdmin(email)}>Make Admin</a>
+          }
+
+        	
+        	<img src={thumbnail} alt="profile picture" />
+        	<p><a href={`mailto:${email}`}>{email}</a></p>
+
+        </div>
+    )
+}
+}
+
+export default Member
+```
+
+# Conclusion
+## Next steps
+- [Redux](https://redux.js.org/) is a state management solution that helps you manage ReactJS
+- [React Native](https://facebook.github.io/react-native/) lets you build mobile apps using React and JavaScript
+- Data management systems:
+  - [Relay](https://facebook.github.io/relay/)
+  - [Falcor](https://netflix.github.io/falcor/)
+  - [GraphQL](http://graphql.org/)
